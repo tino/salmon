@@ -133,6 +133,37 @@ class MailBase(object):
         """Returns header keys."""
         return self.headers.keys()
 
+    def update_headers(self):
+        """Updates headers with the contents of content_encoding"""
+        # this isn't the best solution, but it requires less thought
+        for key, value in self.content_encoding.items():
+            print "%s: %s" % (key, value)
+            if value[0] is None:
+                del self.headers[key]
+                print "delete!"
+                continue
+            elif value[1] is {}:
+                new_value = value[0]
+                print "no parms!"
+            else:
+                data = [value[0]]
+                for k, v in value[1].items():
+                    data.append("%s=%s" % (k,v))
+
+                new_value = "; ".join(data)
+                print "parms!"
+
+            if key in self.headers:
+                self.headers.replace_item(key, new_value)
+                print "replace!"
+            else:
+                self.headers[key] = new_value
+                print "new!"
+
+    def update_content_encoding(self):
+        """Updates content_encoding with values from headers"""
+        raise NotImplementedError # for now
+
     def attach_file(self, filename, data, ctype, disposition):
         """
         A file attachment is a raw attachment with a disposition that
@@ -147,6 +178,10 @@ class MailBase(object):
         part.content_encoding['Content-Disposition'] = (disposition,
                                                         {'filename': filename})
         self.parts.append(part)
+        part.update_headers()
+
+        self.content_encoding['Content-Type'] = ("multipart/mixed", {})
+        self.update_headers()
 
 
     def attach_text(self, data, ctype):
@@ -160,6 +195,10 @@ class MailBase(object):
         part.body = data
         part.content_encoding['Content-Type'] = (ctype, {})
         self.parts.append(part)
+        part.update_headers()
+
+        self.content_encoding['Content-Type'] = ("multipart/mixed", {})
+        self.update_headers()
 
     def walk(self):
         for p in self.parts:
