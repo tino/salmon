@@ -71,7 +71,6 @@ Source documentation
 .. currentmodule:: salmon
 
 .. autosummary::
-   :toctree: generated/
 
    salmon.handlers
    salmon.bounce
